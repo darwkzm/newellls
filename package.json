@@ -1,8 +1,8 @@
 {
   "name": "newells-hub-pro",
   "version": "2.0.0",
-  "description": "Gestión profesional del plantel de Newell's Hub con arquitectura mejorada.",
+  "description": "Gestión profesional del plantel de Newell's Hub con Vercel KV.",
   "dependencies": {
-    "@upstash/redis": "^1.31.5"
+    "@vercel/kv": "latest"
   }
 }
