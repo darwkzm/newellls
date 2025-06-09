@@ -1,40 +1,32 @@
 // api/data.js
 
-// ¡ESTA LÍNEA ES LA CLAVE DE TODO!
-// Al importar 'kv' desde '@vercel/kv', estás importando un objeto ya configurado.
-// Vercel lee automáticamente las variables de entorno (KV_URL, KV_TOKEN, etc.)
-// que él mismo añadió a tu proyecto cuando conectaste la base de datos.
-// No necesitas poner URLs o tokens aquí, ¡la conexión ya está lista!
-import { kv } from '@vercel/kv';
+// Importamos el cliente oficial de Redis desde Upstash.
+import { Redis } from '@upstash/redis';
+
+// ¡AQUÍ ESTÁ LA CONEXIÓN DIRECTA!
+// Redis.fromEnv() es una función útil que busca automáticamente las variables
+// UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN que Vercel
+// añadió a tu proyecto por ti. Es limpio y seguro.
+const redis = Redis.fromEnv();
+
 
 // --- ADVERTENCIA DE SEGURIDAD ---
-// Es buena práctica gestionar las contraseñas como variables de entorno.
-// Para un proyecto en producción, considera usar 'bcrypt' para encriptarlas.
 const PLAYER_PASSWORD = process.env.PLAYER_PASSWORD || 'newells';
 const STAFF_USER = process.env.STAFF_USER || 'newell';
 const STAFF_PASSWORD = process.env.STAFF_PASSWORD || 'staff';
 
 
 // --- FUNCIONES AUXILIARES DE LA BASE DE DATOS ---
+// La lógica interna no cambia, solo el cliente que ejecuta los comandos (ahora es 'redis' en vez de 'kv')
 
-/**
- * Obtiene todos los ítems (jugadores/aplicaciones) usando la estructura de
- * Sets y Hashes de Redis, a través del SDK de Vercel KV.
- * @param {'players'|'applications'} type El tipo de dato a obtener.
- * @returns {Promise<Array<Object>>} Un array con los objetos.
- */
 async function getAllItems(type) {
-    // kv.smembers obtiene todos los IDs del conjunto 'players:all' o 'applications:all'
-    const ids = await kv.smembers(`${type}:all`);
+    const ids = await redis.smembers(`${type}:all`);
     if (!ids || ids.length === 0) return [];
 
-    // Usamos un pipeline para hacer múltiples peticiones a la vez, es muy eficiente.
-    const pipeline = kv.pipeline();
-    // Para cada ID, pedimos todos los campos de su hash (ej: 'players:1')
+    const pipeline = redis.pipeline();
     ids.forEach(id => pipeline.hgetall(`${type}:${id}`));
     const results = await pipeline.exec();
 
-    // Filtramos resultados nulos y convertimos los datos a sus tipos correctos
     return results.filter(r => r).map(item => ({
         ...item,
         id: parseInt(item.id, 10),
@@ -45,17 +37,12 @@ async function getAllItems(type) {
     }));
 }
 
-/**
- * Pobla la base de datos con datos iniciales si está vacía.
- */
 async function initializeDatabase() {
     const initialData = getInitialData();
-    const pipeline = kv.pipeline();
+    const pipeline = redis.pipeline();
 
     initialData.players.forEach(p => {
-        // Añade el ID del jugador al conjunto 'players:all'
         pipeline.sadd('players:all', p.id);
-        // Crea un hash para el jugador (ej: 'players:1') con todos sus datos
         pipeline.hset(`players:${p.id}`, {
             ...p,
             stats: JSON.stringify(p.stats || {})
@@ -63,16 +50,15 @@ async function initializeDatabase() {
     });
     
     await pipeline.exec();
-    console.log("Base de datos KV inicializada con jugadores por defecto.");
+    console.log("Base de datos Redis inicializada con jugadores por defecto.");
 }
 
 
-// --- HANDLER PRINCIPAL DE LA API (Serverless Function) ---
+// --- HANDLER PRINCIPAL DE LA API ---
 export default async function handler(req, res) {
     const method = req.method;
     let body;
     try {
-        // Un parseo de body más robusto
         body = req.body ? (typeof req.body === 'string' ? JSON.parse(req.body) : req.body) : {};
     } catch (e) {
         return res.status(400).json({ error: 'Cuerpo de la petición inválido.' });
@@ -81,7 +67,6 @@ export default async function handler(req, res) {
     try {
         if (method === 'GET') {
             let players = await getAllItems('players');
-            // Si la base de datos está vacía, la llenamos con datos de ejemplo
             if (players.length === 0) {
                 await initializeDatabase();
                 players = await getAllItems('players');
@@ -93,7 +78,7 @@ export default async function handler(req, res) {
         if (method === 'POST') {
             const { type, payload } = body;
 
-            // Logins (la validación ocurre aquí, en el servidor)
+            // Logins
             if (type === 'player_login' && payload.password === PLAYER_PASSWORD) {
                 return res.status(200).json({ success: true });
             }
@@ -107,8 +92,8 @@ export default async function handler(req, res) {
             // Nueva aplicación
             if (type === 'application') {
                 const appId = Date.now();
-                await kv.sadd('applications:all', appId);
-                await kv.hset(`applications:${appId}`, { ...payload, id: appId });
+                await redis.sadd('applications:all', appId);
+                await redis.hset(`applications:${appId}`, { ...payload, id: appId });
                 const applications = await getAllItems('applications');
                 return res.status(200).json({ success: true, applications });
             }
@@ -117,9 +102,9 @@ export default async function handler(req, res) {
         if (method === 'PUT') {
             const { type, payload } = body;
 
-            // Actualizar un único jugador
+            // Actualizar un jugador
             if (type === 'update_player') {
-                await kv.hset(`players:${payload.id}`, { ...payload, stats: JSON.stringify(payload.stats) });
+                await redis.hset(`players:${payload.id}`, { ...payload, stats: JSON.stringify(payload.stats) });
                 const players = await getAllItems('players');
                 return res.status(200).json({ success: true, players });
             }
@@ -128,17 +113,17 @@ export default async function handler(req, res) {
         if (method === 'DELETE') {
              const { type, payload } = body;
 
-            // Procesar (aprobar/rechazar) una aplicación
+            // Procesar aplicación
             if (type === 'process_application') {
                 const { appId, approved, newPlayerData } = payload;
                 if (approved) {
                     const newId = Date.now();
-                    await kv.sadd('players:all', newId);
-                    await kv.hset(`players:${newId}`, { ...newPlayerData, id: newId, stats: JSON.stringify(newPlayerData.stats) });
+                    await redis.sadd('players:all', newId);
+                    await redis.hset(`players:${newId}`, { ...newPlayerData, id: newId, stats: JSON.stringify(newPlayerData.stats) });
                 }
                 
-                await kv.srem('applications:all', appId);
-                await kv.del(`applications:${appId}`);
+                await redis.srem('applications:all', appId);
+                await redis.del(`applications:${appId}`);
                 
                 const players = await getAllItems('players');
                 const applications = await getAllItems('applications');
@@ -146,11 +131,10 @@ export default async function handler(req, res) {
             }
         }
 
-        // Si no coincide ningún método o tipo, devolvemos un error
-        return res.status(405).json({ error: `Método ${method} o tipo de acción no permitido.` });
+        return res.status(405).json({ error: `Método ${method} no permitido.` });
 
     } catch (error) {
-        console.error("Error en API Vercel KV:", error);
+        console.error("Error en API con Redis:", error);
         return res.status(500).json({ error: 'Ha ocurrido un error en el servidor.' });
     }
 }
