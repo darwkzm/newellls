@@ -1,0 +1,15 @@
+{
+  "name": "newells-hub",
+  "version": "1.0.0",
+  "description": "Aplicación web para gestión de equipo amateur de fútbol - Newell's Hub",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev",
+    "build": "echo 'No build step needed'",
+    "vercel-build": "echo 'No build required'"
+  },
+  "dependencies": {
+    "@vercel/kv": "latest"
+  },
+  "license": "MIT"
+}
