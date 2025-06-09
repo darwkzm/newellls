@@ -1,24 +1,13 @@
 /**
  * @file script.js
  * @description Lógica principal para la aplicación Newell's Hub.
- * @version 3.0.0
+ * @version 3.1.0 (Guardado de Staff corregido)
  */
 
 const App = {
-    // Almacenamiento local de los datos obtenidos de la API
-    db: {
-        players: [],
-        applications: []
-    },
-    // Estado actual de la sesión del usuario
-    state: {
-        loggedInPlayerId: null,
-        isSpectator: false,
-        isStaff: false
-    },
-    // Caché de elementos del DOM para un acceso rápido
+    db: { players: [], applications: [] },
+    state: { loggedInPlayerId: null, isSpectator: false, isStaff: false },
     elements: {},
-    // Constantes de la aplicación
     POSITIONS: ['POR', 'DFC', 'LTD', 'LTI', 'MCD', 'MC', 'MCO', 'ED', 'EI', 'DC'],
     SKILLS: ['Velocidad', 'Tiro', 'Pase Clave', 'Regate', 'Entradas', 'Fuerza', 'Visión', 'Reflejos', 'Resistencia', 'Lectura de Juego', 'Cabezazo', 'Centros'],
     icons: {
@@ -27,9 +16,6 @@ const App = {
         logout: `<svg fill="currentColor" viewBox="0 0 20 20" width="20" height="20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path></svg>`
     },
 
-    /**
-     * Punto de entrada principal de la aplicación.
-     */
     async init() {
         this.cacheElements();
         this.setupEventListeners();
@@ -45,9 +31,6 @@ const App = {
         }
     },
 
-    /**
-     * Guarda referencias a los elementos del DOM más utilizados.
-     */
     cacheElements() {
         this.elements = {
             loader: document.getElementById('loader'),
@@ -63,9 +46,6 @@ const App = {
         };
     },
 
-    /**
-     * Configura todos los listeners de eventos de la aplicación.
-     */
     setupEventListeners() {
         this.elements.roleSelectionScreen.addEventListener('click', e => {
             const action = e.target.closest('[data-action]')?.dataset.action;
@@ -112,9 +92,6 @@ const App = {
         });
     },
 
-    /**
-     * Comprueba si hay una sesión de jugador guardada en las cookies.
-     */
     checkSession() {
         const loggedInId = this.getCookie('loggedInPlayerId');
         if (loggedInId && this.db.players.some(p => p.id === parseInt(loggedInId))) {
@@ -124,10 +101,6 @@ const App = {
         }
     },
 
-    /**
-     * Inicia la sesión para un jugador.
-     * @param {number} playerId - El ID del jugador que inicia sesión.
-     */
     startPlayerSession(playerId) {
         this.state.loggedInPlayerId = playerId;
         this.state.isSpectator = false;
@@ -141,9 +114,6 @@ const App = {
         this.renderAll();
     },
 
-    /**
-     * Configura la aplicación en modo espectador.
-     */
     enterAsSpectator() {
         this.state.loggedInPlayerId = null;
         this.state.isSpectator = true;
@@ -156,9 +126,6 @@ const App = {
         this.renderAll();
     },
 
-    /**
-     * Cierra la sesión del usuario y vuelve a la pantalla de inicio.
-     */
     logout() {
         this.eraseCookie('loggedInPlayerId');
         this.state = { loggedInPlayerId: null, isSpectator: false, isStaff: false };
@@ -167,93 +134,50 @@ const App = {
         this.elements.roleSelectionScreen.classList.remove('hidden');
     },
 
-    /**
-     * Cierra la sesión del staff, pero mantiene la sesión del usuario.
-     */
     logoutStaff() {
         this.state.isStaff = false;
         this.closeModal();
         console.log("Sesión de Staff cerrada.");
     },
 
-    /**
-     * Renderiza o actualiza todos los componentes visuales principales.
-     */
     renderAll() {
         this.renderPlayerCards();
         this.renderSummaryTable();
         this.renderFooter();
         if (this.state.isStaff && document.querySelector('.staff-modal')) {
-            this.openStaffPanel(false); // No re-renderizar la base del modal
+            this.openStaffPanel(false);
         }
     },
     
-    // --- FUNCIONES DE RENDERIZADO DE COMPONENTES ---
-
     renderPlayerCards() {
-        this.elements.playersGrid.innerHTML = this.db.players
-            .map(p => this.getPlayerCardHTML(p))
-            .join('');
+        this.elements.playersGrid.innerHTML = this.db.players.map(p => this.getPlayerCardHTML(p)).join('');
     },
     
     getPlayerCardHTML(player) {
         const { id, name, position, skill, number_current, number_new, isExpelled } = player;
         const isCurrentUser = id === this.state.loggedInPlayerId;
         const numberDisplay = number_new ? `#${number_current || '--'} <span class="new-number-tag">(Pide: ${number_new})</span>` : `#${number_current || '--'}`;
-        
-        return `
-            <div class="fifa-card ${isExpelled ? 'is-expelled' : ''} ${isCurrentUser ? 'is-current-user' : ''}" data-player-id="${id}">
-                <div class="card-top"><span class="player-skill">${skill || 'N/A'}</span></div>
-                <div class="card-jersey-container">${this.icons.jersey}</div>
-                <div class="card-bottom">
-                    <h3 class="player-name">${name.toUpperCase()}</h3>
-                    <p class="player-position">${position || 'Sin Posición'}</p>
-                    <div class="player-numbers-display">${numberDisplay}</div>
-                </div>
-                ${isExpelled ? this.icons.redCard : ''}
-            </div>`;
+        return `<div class="fifa-card ${isExpelled ? 'is-expelled' : ''} ${isCurrentUser ? 'is-current-user' : ''}" data-player-id="${id}"><div class="card-top"><span class="player-skill">${skill || 'N/A'}</span></div><div class="card-jersey-container">${this.icons.jersey}</div><div class="card-bottom"><h3 class="player-name">${name.toUpperCase()}</h3><p class="player-position">${position || 'Sin Posición'}</p><div class="player-numbers-display">${numberDisplay}</div></div>${isExpelled ? this.icons.redCard : ''}</div>`;
     },
 
     renderSummaryTable() {
         const sortedPlayers = [...this.db.players].sort((a, b) => (b.stats?.goles || 0) - (a.stats?.goles || 0));
-        this.elements.summaryBody.innerHTML = sortedPlayers
-            .map(p => `
-                <div class="summary-row">
-                    <div>${p.name}</div>
-                    <div>${p.position || 'N/A'}</div>
-                    <div>${p.skill || 'N/A'}</div>
-                    <div class="goals">${p.stats?.goles || 0}</div>
-                    <div>${p.number_current || '--'}</div>
-                    <div>${p.number_new ? `<span class="new-number">${p.number_new}</span>` : '--'}</div>
-                </div>`)
-            .join('');
+        this.elements.summaryBody.innerHTML = sortedPlayers.map(p => `<div class="summary-row"><div>${p.name}</div><div>${p.position || 'N/A'}</div><div>${p.skill || 'N/A'}</div><div class="goals">${p.stats?.goles || 0}</div><div>${p.number_current || '--'}</div><div>${p.number_new ? `<span class="new-number">${p.number_new}</span>` : '--'}</div></div>`).join('');
     },
 
     renderFooter() {
         const buttonText = this.state.isSpectator ? "Volver al Inicio" : "Cambiar de Jugador";
-        this.elements.mainFooter.innerHTML = `
-            <button class="action-btn" data-action="showApplication">¿Eres nuevo? Postúlate</button>
-            <button class="action-btn" data-action="logout">${buttonText}</button>`;
+        this.elements.mainFooter.innerHTML = `<button class="action-btn" data-action="showApplication">¿Eres nuevo? Postúlate</button><button class="action-btn" data-action="logout">${buttonText}</button>`;
     },
     
-    // --- MANEJO DE MODALES ---
-
     openLoginModal() {
         const playerOptions = this.db.players.sort((a, b) => a.name.localeCompare(b.name)).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-        const content = `
-            <h2>¿Quién Eres?</h2>
-            <form id="playerLoginForm">
-                <div class="form-group"><label for="playerSelect">Selecciona tu Perfil</label><select id="playerSelect" required><option value="" disabled selected>-- Elige tu nombre --</option>${playerOptions}</select></div>
-                <div class="form-group"><label for="playerPass">Contraseña</label><input type="password" id="playerPass" required autocomplete="current-password"></div>
-                <button type="submit" class="submit-btn">Entrar</button>
-            </form>`;
+        const content = `<h2>¿Quién Eres?</h2><form id="playerLoginForm"><div class="form-group"><label for="playerSelect">Selecciona tu Perfil</label><select id="playerSelect" required><option value="" disabled selected>-- Elige tu nombre --</option>${playerOptions}</select></div><div class="form-group"><label for="playerPass">Contraseña</label><input type="password" id="playerPass" required autocomplete="current-password"></div><button type="submit" class="submit-btn">Entrar</button></form>`;
         this.renderModal(content);
-        
         document.getElementById('playerLoginForm').addEventListener('submit', async e => {
             e.preventDefault();
             const selectedId = document.getElementById('playerSelect').value;
-            if (!selectedId) return console.error('Debes seleccionar un nombre.');
-            
+            if (!selectedId) return alert('Debes seleccionar un nombre.');
             try {
                 const password = document.getElementById('playerPass').value;
                 await this.apiCall('/api/data', 'POST', { type: 'player_login', payload: { password } });
@@ -268,13 +192,7 @@ const App = {
 
     openPlayerActionModal(playerId) {
         const player = this.db.players.find(p => p.id === playerId);
-        const content = `
-            <h2>${player.name.toUpperCase()}</h2>
-            <p>¿Qué deseas hacer?</p>
-            <div class="modal-options">
-                <button class="option-btn" id="action-dorsal">Asignar Nuevo Dorsal</button>
-                <button class="option-btn" id="action-pos-skill">Actualizar Posición y Skill</button>
-            </div>`;
+        const content = `<h2>${player.name.toUpperCase()}</h2><p>¿Qué deseas hacer?</p><div class="modal-options"><button class="option-btn" id="action-dorsal">Asignar Nuevo Dorsal</button><button class="option-btn" id="action-pos-skill">Actualizar Posición y Skill</button></div>`;
         this.renderModal(content);
         document.getElementById('action-dorsal').addEventListener('click', () => this.openNumberSelectionModal(player));
         document.getElementById('action-pos-skill').addEventListener('click', () => this.openPosSkillModal(player));
@@ -286,9 +204,7 @@ const App = {
         document.getElementById('numberForm').addEventListener('submit', e => {
             e.preventDefault();
             const newNumber = parseInt(document.getElementById('newNumber').value);
-            if (this.isNumberTaken(newNumber, player.id)) {
-                return alert('Ese dorsal ya está en uso o solicitado. Elige otro.');
-            }
+            if (this.isNumberTaken(newNumber, player.id)) return alert('Ese dorsal ya está en uso o solicitado. Elige otro.');
             this.updatePlayer({ ...player, number_new: newNumber || null });
             this.closeModal();
         });
@@ -309,15 +225,8 @@ const App = {
         this.renderModal(content);
         document.getElementById('applicationForm').addEventListener('submit', async e => {
             e.preventDefault();
-            if (this.isNumberTaken(parseInt(document.getElementById('appNumber').value))) {
-                return alert('El número deseado ya está en uso. Elige otro.');
-            }
-            const payload = {
-                name: document.getElementById('appName').value,
-                number: parseInt(document.getElementById('appNumber').value),
-                position: document.getElementById('appPosition').value,
-                skill: document.getElementById('appSkill').value,
-            };
+            if (this.isNumberTaken(parseInt(document.getElementById('appNumber').value))) return alert('El número deseado ya está en uso. Elige otro.');
+            const payload = { name: document.getElementById('appName').value, number: parseInt(document.getElementById('appNumber').value), position: document.getElementById('appPosition').value, skill: document.getElementById('appSkill').value };
             try {
                 const { applications } = await this.apiCall('/api/data', 'POST', { type: 'application', payload });
                 this.db.applications = applications;
@@ -349,10 +258,7 @@ const App = {
     },
 
     openStaffPanel(renderBase = true) {
-        const contentHTML = `
-            <div class="staff-header"><h2>Panel de Administración</h2><div class="header-actions"><button class="action-btn-small" data-action="addPlayer">Añadir Jugador</button><button class="action-btn-small logout-btn" data-action="logoutStaff">${this.icons.logout}</button></div></div>
-            <div class="staff-tabs"><button class="tab-btn active" data-tab="players">Jugadores (${this.db.players.length})</button><button class="tab-btn" data-tab="applications">Solicitudes (${this.db.applications.length})</button></div>
-            <div class="staff-content" id="staffContent"></div>`;
+        const contentHTML = `<div class="staff-header"><h2>Panel de Administración</h2><div class="header-actions"><button class="action-btn-small" data-action="addPlayer">Añadir Jugador</button><button class="action-btn-small logout-btn" data-action="logoutStaff">${this.icons.logout}</button></div></div><div class="staff-tabs"><button class="tab-btn active" data-tab="players">Jugadores (${this.db.players.length})</button><button class="tab-btn" data-tab="applications">Solicitudes (${this.db.applications.length})</button></div><div class="staff-content" id="staffContent"></div>`;
         if (renderBase) this.renderModal(contentHTML, true, 'staff-modal');
         this.renderStaffContent('players');
         document.querySelector('.staff-tabs')?.addEventListener('click', e => {
@@ -366,7 +272,9 @@ const App = {
 
     openEditPlayerModal(playerId) {
         const isNew = playerId === null;
-        const player = isNew ? { stats: {}, isExpelled: false } : this.db.players.find(p => p.id === parseInt(playerId));
+        const player = isNew ? { stats: {} } : this.db.players.find(p => p.id === parseInt(playerId));
+        if (!player) return alert("Error: No se pudo encontrar al jugador.");
+
         const modalContent = `<h2>${isNew ? 'Añadir Nuevo Jugador' : 'Editar a ' + player.name}</h2><form id="editForm"><div class="form-grid"><div class="form-group"><label>Nombre</label><input id="name" value="${player.name || ''}" required></div><div class="form-group"><label>Posición</label>${this.getSelectHTML('position', this.POSITIONS, player.position)}</div><div class="form-group"><label>Skill</label>${this.getSelectHTML('skill', this.SKILLS, player.skill)}</div><div class="form-group"><label>N° Actual</label><input id="num_current" type="number" value="${player.number_current || ''}"></div><div class="form-group"><label>N° Solicitado</label><input id="num_new" type="number" value="${player.number_new || ''}"></div><div class="form-group"><label>Goles</label><input id="stat_goles" type="number" value="${player.stats?.goles || 0}"></div><div class="form-group"><label>Partidos</label><input id="stat_partidos" type="number" value="${player.stats?.partidos || 0}"></div><div class="form-group"><label>Asistencias</label><input id="stat_asistencias" type="number" value="${player.stats?.asistencias || 0}"></div></div><div class="form-group checkbox-group"><input id="isExpelled" type="checkbox" ${player.isExpelled ? 'checked' : ''}><label for="isExpelled">Marcar como Expulsado</label></div><button type="submit" class="submit-btn">${isNew ? 'Añadir al Plantel' : 'Guardar Cambios'}</button></form>`;
         this.renderModal(modalContent, true);
 
@@ -376,9 +284,8 @@ const App = {
             if (this.isNumberTaken(parseInt(document.getElementById('num_current').value), idToCheck) || this.isNumberTaken(parseInt(document.getElementById('num_new').value), idToCheck)) {
                 return alert('Uno de los números ya está en uso. Verifícalo.');
             }
-            
-            const formPlayer = {
-                id: isNew ? Date.now() : player.id, // Asigna un nuevo ID si es nuevo
+            const playerPayload = {
+                id: isNew ? Date.now() : player.id,
                 name: document.getElementById('name').value,
                 position: document.getElementById('position').value,
                 skill: document.getElementById('skill').value,
@@ -387,7 +294,7 @@ const App = {
                 isExpelled: document.getElementById('isExpelled').checked,
                 stats: { goles: parseInt(document.getElementById('stat_goles').value) || 0, partidos: parseInt(document.getElementById('stat_partidos').value) || 0, asistencias: parseInt(document.getElementById('stat_asistencias').value) || 0 }
             };
-            await this.updatePlayer(formPlayer);
+            await this.savePlayer(playerPayload);
             this.closeModal();
         });
     },
@@ -400,29 +307,37 @@ const App = {
         container.innerHTML = `<div class="staff-list">${tab === 'players' ? playersHTML : appsHTML}</div>`;
     },
     
-    // --- LÓGICA DE DATOS Y API ---
-
-    async updatePlayer(updatedPlayer) {
-        const originalPlayers = JSON.parse(JSON.stringify(this.db.players));
-        const playerIndex = this.db.players.findIndex(p => p.id === updatedPlayer.id);
-        if (playerIndex > -1) {
-            this.db.players[playerIndex] = updatedPlayer;
-        } else {
-            this.db.players.push(updatedPlayer); // Añadir si es nuevo
-        }
-        this.renderAll();
-
+    /**
+     * CORREGIDO: Lógica de guardado más robusta y separada.
+     * Esta función solo se preocupa de enviar los datos al servidor y actualizar la UI con la respuesta.
+     * @param {object} playerPayload - El objeto completo del jugador a guardar.
+     */
+    async savePlayer(playerPayload) {
         try {
-            const { players } = await this.apiCall('/api/data', 'PUT', { type: 'update_player', payload: updatedPlayer });
+            // Envía los datos al servidor. La API se encarga de crear o actualizar.
+            const { players } = await this.apiCall('/api/data', 'PUT', { type: 'update_player', payload: playerPayload });
+            
+            // La única fuente de verdad es la respuesta del servidor.
             this.db.players = players;
-            console.log('Jugador actualizado/añadido con éxito.');
+            
+            // Re-renderiza toda la aplicación con los datos actualizados.
+            this.renderAll();
+            
+            console.log('Jugador guardado con éxito en el servidor.');
+
         } catch (e) {
-            this.db.players = originalPlayers;
             console.error(`Error al guardar jugador: ${e.message}`);
             alert(`Error al guardar: ${e.message}`);
-        } finally {
-            this.renderAll();
+            // No se revierte nada, porque la UI no se actualizó de forma optimista.
         }
+    },
+    
+    /**
+     * Lógica anterior renombrada para reflejar su propósito.
+     * Se usa para cambios que no necesitan pasar por el formulario de Staff.
+     */
+    async updatePlayer(playerPayload) {
+        await this.savePlayer(playerPayload);
     },
 
     async handleApplication(appId, isApproved) {
@@ -430,21 +345,18 @@ const App = {
         if (!app) return;
         let newPlayerData = null;
         if (isApproved) {
-            if (this.isNumberTaken(app.number)) {
-                return alert('No se puede aprobar: El número ya está en uso.');
-            }
+            if (this.isNumberTaken(app.number)) return alert('No se puede aprobar: El número ya está en uso.');
             newPlayerData = { name: app.name, position: app.position, skill: app.skill, number_current: app.number, number_new: null, isExpelled: false, stats: { goles: 0, partidos: 0, asistencias: 0 } };
         }
         try {
             const { players, applications } = await this.apiCall('/api/data', 'DELETE', { type: 'process_application', payload: { appId: parseInt(appId), approved: isApproved, newPlayerData } });
             this.db.players = players;
             this.db.applications = applications;
+            this.renderAll();
             console.log(`Solicitud ${isApproved ? 'aprobada' : 'rechazada'}.`);
         } catch (e) {
             console.error(`Error al procesar solicitud: ${e.message}`);
             alert(`Error al procesar: ${e.message}`);
-        } finally {
-            this.renderAll();
         }
     },
 
@@ -456,8 +368,6 @@ const App = {
         if (!response.ok) throw new Error(data.error || 'Ocurrió un error desconocido.');
         return data;
     },
-
-    // --- FUNCIONES UTILITARIAS ---
 
     isNumberTaken(number, excludePlayerId = null) {
         if (!number) return false;
@@ -513,5 +423,4 @@ const App = {
     }
 };
 
-// Iniciar la aplicación cuando el DOM esté listo.
 document.addEventListener('DOMContentLoaded', () => App.init());
