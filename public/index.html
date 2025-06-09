@@ -1,64 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Newell's Hub</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newell's Hub | Edición Definitiva</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏆</text></svg>">
 </head>
 <body>
-  <div id="loader" class="loader-container show">
-    <div class="loader-spinner"></div>
-  </div>
-
-  <div class="background-texture"></div>
-
-  <div id="role-selection-screen" class="role-selection-container hidden">
-    <header class="main-header">
-      <h1>NEWELL'S HUB</h1>
-      <p>BIENVENIDO</p>
-    </header>
-    <div class="role-options">
-      <button class="role-btn" data-action="player-login">Soy Jugador</button>
-      <button class="role-btn secondary" data-action="spectator-login">Solo Vengo a Ver</button>
+    <div id="loader" class="loader-container show">
+        <div class="loader-spinner"></div>
     </div>
-  </div>
+    <div class="background-texture"></div>
 
-  <div class="main-container hidden" id="mainContainer">
-    <header class="main-header">
-      <h1 id="main-title"></h1>
-      <p id="main-subtitle"></p>
-    </header>
-
-    <div class="players-grid" id="playersGrid"></div>
-
-    <section class="summary-table-container">
-      <h2>Resumen del Plantel y Goleadores</h2>
-      <div class="summary-table" id="summaryTable">
-        <div class="summary-header">
-          <div>Jugador</div><div>Posición</div><div>Skill</div><div>Goles</div><div>N° Actual</div><div>N° Nuevo</div>
+    <div id="role-selection-screen" class="role-selection-container hidden">
+        <header class="main-header">
+            <h1>NEWELL'S HUB</h1>
+            <p>BIENVENIDO</p>
+        </header>
+        <div class="role-options">
+            <button class="role-btn" data-action="player-login">Soy Jugador</button>
+            <button class="role-btn secondary" data-action="spectator-login">Solo Vengo a Ver</button>
         </div>
-        <div class="summary-body" id="summaryBody"></div>
-      </div>
-    </section>
+    </div>
 
-    <footer class="main-footer" id="mainFooter"></footer>
-  </div>
+    <div class="main-container hidden" id="mainContainer">
+        <header class="main-header">
+            <h1 id="main-title"></h1>
+            <p id="main-subtitle"></p>
+        </header>
 
-  <div id="modal-container"></div>
-
-  <button class="floating-btn hidden" id="staffBtn" aria-label="Abrir panel de staff">
-    <svg fill="currentColor" viewBox="0 0 20 20">
-      <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path>
-    </svg>
-  </button>
-
-  <div id="notification-container"></div>
-
-  <script src="script.js" type="module"></script>
+        <div class="players-grid" id="playersGrid"></div>
+        <section class="summary-table-container">
+            <h2>Resumen del Plantel y Goleadores</h2>
+            <div class="summary-table" id="summaryTable">
+                <div class="summary-header">
+                    <div>Jugador</div><div>Posición</div><div>Skill</div><div>Goles</div><div>N° Actual</div><div>N° Nuevo</div>
+                </div>
+                <div class="summary-body" id="summaryBody"></div>
+            </div>
+        </section>
+        <footer class="main-footer" id="mainFooter"></footer>
+    </div>
+    
+    <div id="modal-container"></div>
+    <button class="floating-btn hidden" id="staffBtn" aria-label="Abrir panel de staff">
+        <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
+    </button>
+    
+    <script src="script.js" type="module"></script>
 </body>
 </html>
